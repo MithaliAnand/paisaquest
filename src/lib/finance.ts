@@ -97,7 +97,7 @@ export function buildNotes(amount: number): NoteDenom[] {
   if (total <= 0) return [];
   const ladder = [100, 200, 500, 2000, 5000, 10000, 20000, 50000, 100000, 500000];
   const target = 12;
-  let base = ladder[0];
+  let base = 100;
   for (const d of ladder) {
     base = d;
     if (Math.floor(total / d) <= target) break;
