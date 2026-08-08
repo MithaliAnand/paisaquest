@@ -15,12 +15,12 @@ function makeCoins(count: number): Coin[] {
   for (let i = 0; i < count; i++) {
     const r = (n: number) => ((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1 + 1) % 1;
     coins.push({
-      left: r(1) * 100,
-      size: 16 + r(2) * 34,
-      delay: r(3) * 18,
-      duration: 22 + r(4) * 26,
-      opacity: 0.12 + r(5) * 0.28,
-      drift: (r(6) - 0.5) * 90,
+      left: Math.round(r(1) * 1000) / 10,
+      size: Math.round(16 + r(2) * 34),
+      delay: Math.round(r(3) * 180) / 10,
+      duration: Math.round(22 + r(4) * 26),
+      opacity: Math.round((0.12 + r(5) * 0.28) * 100) / 100,
+      drift: Math.round((r(6) - 0.5) * 90),
     });
   }
   return coins;

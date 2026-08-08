@@ -107,7 +107,7 @@ export function BudgetStage() {
       <section className="glass-card p-5 sm:p-7">
         <p className="text-xs font-bold uppercase tracking-widest text-gold-deep">Monthly adventure</p>
         <h2 className="mt-1 text-2xl font-extrabold sm:text-3xl">
-          Where should {state.profile?.name?.split(" ")[0] ?? "your"} money go?
+          Where should {state.profile?.name?.split(" ")[0] ?? "your"}&rsquo;s money go?
         </h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           {[
