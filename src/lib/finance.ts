@@ -247,6 +247,8 @@ export type HealthInput = {
   availableBudget: number;
   funSpend: number;
   shortfallHits: number;
+  debt: number;
+  eventsAbsorbed: number;
 };
 
 export type HealthBreakdown = {
@@ -254,28 +256,71 @@ export type HealthBreakdown = {
   parts: { label: string; score: number; max: number; hint: string }[];
 };
 
+export type CoverageBand = {
+  label: "High risk" | "Moderate" | "Good" | "Excellent";
+  tone: "warn" | "neutral" | "ok" | "great";
+  note: string;
+};
+
+export function coverageMonths(emergencyFund: number, expenses: number): number {
+  if (expenses <= 0) return emergencyFund > 0 ? 12 : 0;
+  return emergencyFund / expenses;
+}
+
+export function coverageBand(months: number): CoverageBand {
+  if (months < 1)
+    return {
+      label: "High risk",
+      tone: "warn",
+      note: "Less than a month of expenses covered — one surprise could hurt.",
+    };
+  if (months < 3)
+    return {
+      label: "Moderate",
+      tone: "neutral",
+      note: "A small cushion. Most planners suggest at least three months.",
+    };
+  if (months < 6)
+    return { label: "Good", tone: "ok", note: "A solid buffer for most life shocks." };
+  return {
+    label: "Excellent",
+    tone: "great",
+    note: "Half a year or more of breathing room. Extra money can now work harder.",
+  };
+}
+
 export function financialHealth(i: HealthInput): HealthBreakdown {
   const clamp = (v: number, max: number) => Math.max(0, Math.min(max, v));
 
   const savingsRate = i.salary > 0 ? (i.savingsBalance + i.invested) / i.salary : 0;
-  const savingsScore = clamp((savingsRate / 0.3) * 25, 25);
+  const savingsScore = clamp((savingsRate / 0.3) * 20, 20);
 
-  const monthsCovered = i.expenses > 0 ? i.emergencyFund / i.expenses : 0;
-  const efScore = clamp((monthsCovered / 3) * 30, 30);
+  const monthsCovered = coverageMonths(i.emergencyFund, i.expenses);
+  const efScore = clamp((monthsCovered / 6) * 30, 30);
 
-  const investRate = i.availableBudget > 0 ? (i.invested + i.monthlyInvestment) / i.availableBudget : 0;
+  const investRate =
+    i.availableBudget > 0 ? (i.invested + i.monthlyInvestment) / i.availableBudget : 0;
   const investScore = clamp((investRate / 0.4) * 20, 20);
 
   const adherence = i.availableBudget > 0 ? i.allocatedTotal / i.availableBudget : 0;
-  const adherenceScore = clamp(adherence * 15, 15);
+  const adherenceScore = clamp(adherence * 10, 10);
 
   const funRate = i.availableBudget > 0 ? i.funSpend / i.availableBudget : 0;
   const spendScore = clamp((1 - funRate / 0.5) * 10, 10);
 
-  const penalty = i.shortfallHits * 6;
+  const debtRatio = i.salary > 0 ? i.debt / (i.salary * 3) : 0;
+  const debtScore = clamp((1 - debtRatio) * 10, 10);
+
+  const eventScore = clamp(i.eventsAbsorbed * 2 - i.shortfallHits * 4, 10);
 
   const total = clamp(
-    savingsScore + efScore + investScore + adherenceScore + spendScore - penalty,
+    savingsScore +
+      efScore +
+      investScore +
+      adherenceScore +
+      spendScore +
+      debtScore +
+      eventScore,
     100,
   );
 
@@ -285,14 +330,14 @@ export function financialHealth(i: HealthInput): HealthBreakdown {
       {
         label: "Savings rate",
         score: Math.round(savingsScore),
-        max: 25,
+        max: 20,
         hint: `${Math.round(savingsRate * 100)}% of salary kept or grown`,
       },
       {
         label: "Emergency cover",
         score: Math.round(efScore),
         max: 30,
-        hint: `${monthsCovered.toFixed(1)} months of expenses covered`,
+        hint: `${monthsCovered.toFixed(1)} months covered · ${coverageBand(monthsCovered).label}`,
       },
       {
         label: "Investing",
@@ -303,7 +348,7 @@ export function financialHealth(i: HealthInput): HealthBreakdown {
       {
         label: "Budget adherence",
         score: Math.round(adherenceScore),
-        max: 15,
+        max: 10,
         hint: `${Math.round(adherence * 100)}% of budget consciously assigned`,
       },
       {
@@ -312,9 +357,30 @@ export function financialHealth(i: HealthInput): HealthBreakdown {
         max: 10,
         hint: `${Math.round(funRate * 100)}% going to lifestyle categories`,
       },
+      {
+        label: "Debt load",
+        score: Math.round(debtScore),
+        max: 10,
+        hint: i.debt > 0 ? `${formatINR(i.debt)} borrowed to cover shocks` : "No borrowing so far",
+      },
+      {
+        label: "Event handling",
+        score: Math.round(eventScore),
+        max: 10,
+        hint: `${i.eventsAbsorbed} absorbed · ${i.shortfallHits} with a shortfall`,
+      },
     ],
   };
 }
 
 export const levelFromXp = (xp: number) => Math.floor(xp / 250) + 1;
 export const xpIntoLevel = (xp: number) => xp % 250;
+
+/* ---------- long term outcome ---------- */
+
+export function formatCrore(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_00_00_000) return `${value < 0 ? "-" : ""}₹${(abs / 1_00_00_000).toFixed(2)} Cr`;
+  if (abs >= 1_00_000) return `${value < 0 ? "-" : ""}₹${(abs / 1_00_000).toFixed(2)} L`;
+  return formatINR(value);
+}
