@@ -21,10 +21,13 @@ export function ProfileDialog({ open, onClose }: { open: boolean; onClose: () =>
   const [salary, setSalary] = useState(state.profile?.salary ?? 0);
   const [savings, setSavings] = useState(state.profile?.savings ?? 0);
   const [expenses, setExpenses] = useState(state.profile?.expenses ?? 0);
+  const [emergencyFund, setEmergencyFund] = useState(state.profile?.emergencyFund ?? 0);
   const [goal, setGoal] = useState(state.profile?.goal ?? GOALS[0]!);
 
   const available = salary - expenses;
   const overspending = expenses > salary;
+  const months = coverageMonths(emergencyFund, expenses);
+  const band = coverageBand(months);
   const canStart = name.trim().length > 1 && salary > 0 && !overspending;
 
   const message = useMemo(() => {
