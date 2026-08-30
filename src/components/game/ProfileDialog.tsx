@@ -4,6 +4,7 @@ import { Sparkles, X } from "lucide-react";
 import { RupeeInput, TextCapsule } from "./Inputs";
 import { AnimatedRupee } from "./AnimatedNumber";
 import { useGame, type Profile } from "@/lib/game-state";
+import { coverageBand, coverageMonths, formatINR } from "@/lib/finance";
 
 const GOALS = [
   "Build a safety net 🛡️",
@@ -110,6 +111,27 @@ export function ProfileDialog({ open, onClose }: { open: boolean; onClose: () =>
                 step={2500}
                 tone={overspending ? "warn" : "neutral"}
               />
+              <RupeeInput
+                label="Emergency fund"
+                value={emergencyFund}
+                onChange={setEmergencyFund}
+                step={5000}
+                hint="Money already set aside for surprises. ₹0 is a perfectly valid start."
+              />
+
+              <div className="sm:col-span-2 rounded-3xl border border-gold/30 bg-cream/70 px-5 py-4 shadow-soft">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                  Emergency coverage
+                </p>
+                <p className="mt-1 text-lg font-extrabold">
+                  {formatINR(emergencyFund)} ÷ {formatINR(expenses)} ={" "}
+                  <span className="gold-text">{months.toFixed(1)} months</span>
+                </p>
+                <p className="text-sm font-semibold text-muted-foreground">
+                  Your emergency fund covers {months.toFixed(1)} months of expenses · {band.label}
+                </p>
+                <p className="text-xs text-muted-foreground">{band.note}</p>
+              </div>
 
               <div className="space-y-1.5 sm:col-span-2">
                 <p className="text-sm font-semibold text-muted-foreground">Financial goal</p>
@@ -148,7 +170,15 @@ export function ProfileDialog({ open, onClose }: { open: boolean; onClose: () =>
             <button
               disabled={!canStart}
               onClick={() =>
-                setProfile({ name: name.trim(), age, salary, savings, expenses, goal } as Profile)
+                setProfile({
+                  name: name.trim(),
+                  age,
+                  salary,
+                  savings,
+                  expenses,
+                  emergencyFund,
+                  goal,
+                } as Profile)
               }
               className="mt-5 w-full rounded-4xl gold-fill py-4 text-lg font-extrabold text-primary-foreground shadow-gold transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
             >

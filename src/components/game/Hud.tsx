@@ -1,7 +1,7 @@
 import { motion } from "motion/react";
 import { Coins, HeartPulse, PiggyBank, Shield, Star, TrendingUp, Trophy } from "lucide-react";
 import { useGame } from "@/lib/game-state";
-import { formatINR, xpIntoLevel } from "@/lib/finance";
+import { coverageBand, formatCrore, formatINR, xpIntoLevel } from "@/lib/finance";
 import { AnimatedRupee } from "./AnimatedNumber";
 
 function Stat({
@@ -48,6 +48,21 @@ export function Hud() {
         </Stat>
         <Stat icon={<Shield className="size-5" />} label="Emergency fund" tint="bg-sky/60">
           <AnimatedRupee value={derived.emergencyFund} />
+        </Stat>
+      </div>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat icon={<Shield className="size-5" />} label="Emergency cover" tint="bg-sky/50">
+          {derived.coverage.toFixed(1)} mo · {coverageBand(derived.coverage).label}
+        </Stat>
+        <Stat icon={<TrendingUp className="size-5" />} label="Net worth at 60" tint="bg-lavender/50">
+          {formatCrore(derived.netWorth60)}
+        </Stat>
+        <Stat icon={<PiggyBank className="size-5" />} label="Savings" tint="bg-mint/50">
+          <AnimatedRupee value={derived.savingsBalance} />
+        </Stat>
+        <Stat icon={<HeartPulse className="size-5" />} label="Debt" tint="bg-blush/50">
+          <AnimatedRupee value={state.debt} />
         </Stat>
       </div>
 
