@@ -1,7 +1,15 @@
 import { motion } from "motion/react";
 import { RefreshCw } from "lucide-react";
 import { useGame } from "@/lib/game-state";
-import { CATEGORIES, formatINR, formatPercent, projectedReturnPct } from "@/lib/finance";
+import {
+  CATEGORIES,
+  coverageBand,
+  formatCrore,
+  formatINR,
+  formatPercent,
+  projectedReturnPct,
+} from "@/lib/finance";
+import { CHAPTERS } from "@/lib/progression";
 
 export function ReportStage() {
   const { state, derived, resetGame, setStage } = useGame();
@@ -26,6 +34,10 @@ export function ReportStage() {
     { label: "Projected value", value: formatINR(projected) },
     { label: "Projected gain", value: formatINR(gain) },
     { label: "Projected return", value: totalContrib > 0 ? formatPercent(pct) : "—" },
+    { label: "Debt taken on", value: formatINR(state.debt) },
+    { label: "Emergency coverage", value: `${derived.coverage.toFixed(1)} months` },
+    { label: "Emergency strength", value: coverageBand(derived.coverage).label },
+    { label: "Projected net worth at 60", value: formatCrore(derived.netWorth60) },
   ];
 
   return (
@@ -123,6 +135,48 @@ export function ReportStage() {
           </ul>
         </section>
       </div>
+
+      <section className="glass-card p-5">
+        <h3 className="text-lg font-extrabold">Key decisions timeline</h3>
+        <ol className="mt-3 space-y-2">
+          {state.chapters.length === 0 && (
+            <li className="text-sm text-muted-foreground">No chapters played yet.</li>
+          )}
+          {state.chapters.map((c) => {
+            const def = CHAPTERS.find((x) => x.id === c.id);
+            return (
+              <li key={c.id} className="rounded-2xl bg-cream/70 px-4 py-2 text-sm font-semibold">
+                <span className="font-extrabold">
+                  {def?.emoji} {def?.title}
+                </span>{" "}
+                — {c.choiceLabel} {c.completed ? "✅" : "⏳"}
+              </li>
+            );
+          })}
+          {state.events.map((e) => (
+            <li key={e.id} className="rounded-2xl bg-blush/40 px-4 py-2 text-sm font-semibold">
+              <span className="font-extrabold">
+                {e.emoji} {e.title}
+              </span>
+              {e.result
+                ? ` — ${formatINR(e.result.cost)}, ${e.result.absorbed ? "absorbed by your fund" : "needed extra money"}`
+                : e.kind === "gain"
+                  ? ` — ${formatINR(e.amount)} received`
+                  : ` — market moved ${(((e.marketFactor ?? 1) - 1) * 100).toFixed(1)}%`}
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="glass-card p-5 text-center">
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          Projected net worth at 60
+        </p>
+        <p className="text-5xl font-extrabold gold-text">{formatCrore(derived.netWorth60)}</p>
+        <p className="mt-1 text-sm font-semibold text-muted-foreground">
+          Can you reach ₹5 Cr by retirement? Start a new run and try a different path.
+        </p>
+      </section>
 
       <section className="glass-card p-5">
         <h3 className="text-lg font-extrabold">Transaction history</h3>

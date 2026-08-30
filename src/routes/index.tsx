@@ -8,6 +8,9 @@ import { BudgetStage } from "@/components/game/BudgetStage";
 import { InvestStage } from "@/components/game/InvestStage";
 import { ScenarioStage } from "@/components/game/ScenarioStage";
 import { ReportStage } from "@/components/game/ReportStage";
+import { ChapterStage } from "@/components/game/ChapterStage";
+import { RunsStage } from "@/components/game/RunsStage";
+import { AuthPanel } from "@/components/game/AuthPanel";
 import { GameProvider, useGame, type Stage } from "@/lib/game-state";
 
 const TITLE = "Paisa Quest — Your Personalised Money Adventure";
@@ -33,10 +36,12 @@ export const Route = createFileRoute("/")({
 });
 
 const NAV: { key: Stage; label: string }[] = [
+  { key: "chapters", label: "Chapters" },
   { key: "budget", label: "Budget" },
   { key: "invest", label: "Invest" },
   { key: "scenario", label: "Life events" },
   { key: "report", label: "Report" },
+  { key: "runs", label: "Runs" },
 ];
 
 function GameShell() {
@@ -104,6 +109,7 @@ function GameShell() {
           </motion.section>
         ) : (
           <>
+            <AuthPanel />
             <Hud />
             <WalletStrip />
             <AnimatePresence mode="wait">
@@ -114,6 +120,8 @@ function GameShell() {
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.25 }}
               >
+                {state.stage === "chapters" && <ChapterStage />}
+                {state.stage === "runs" && <RunsStage />}
                 {state.stage === "invest" && <InvestStage />}
                 {state.stage === "scenario" && <ScenarioStage />}
                 {state.stage === "report" && <ReportStage />}
